@@ -2,6 +2,9 @@ const Discord = require("discord.js");
 const ytdl = require('ytdl-core');
 const client = new Discord.Client();
 
+var reaction_role_msg = '829871867455602750';
+var reaction_role_channel = '813477000521580544';
+
 client.on("ready", () => {
     console.log("I am ready !");
 });
@@ -178,5 +181,61 @@ client.on('message', async message => {
             break;
     }
 })
+
+client.on('message', async function (message) {
+    
+    if (message.content.toLowerCase().startsWith('*reaction_role')) {
+        const channel = message.channel;
+        msg = "Bonjour à tous,\n\nBienvenue sur le server Epitech Paris - Challenge Lycée.\n\nAfin de vous permettre d'accéder à tous les salons nous vous proposons de vous attribuer un rôle en réagissant au message :\n\n<:mandalorian:828282697641230416>  : `si vous êtes professeur`\n\n<:babyyoda:828279420069740585>  : `si vous êtes lycéen`\n\nBon challenge à tous."
+        babyyoda_emoji = "828279420069740585"
+        mandalorian_emoji = "828282697641230416"
+        message.delete();
+        let embed = new Discord.MessageEmbed()
+            .setColor('#e42643')
+            .setTitle('Que la force soit avec vous !')
+            .setDescription(msg);
+        channel.send(embed).then(post => {
+          post.react(mandalorian_emoji)
+          post.react(babyyoda_emoji)
+        })
+        
+    }
+})
+
+client.on('messageReactionAdd', async (reaction, user) => {
+    lycee_role = reaction.message.guild.roles.cache.find(role => role.name === "Lycéen");
+    prof_role = reaction.message.guild.roles.cache.find(role => role.name === "Professeur");
+    if (user.bot) return;
+    if (!reaction.message.guild) return;
+    console.log(reaction.message.channel.id)
+    console.log(reaction_role_channel)
+    if (reaction.message.channel.id == reaction_role_channel) {
+        if (reaction.emoji.id === mandalorian_emoji) {
+            if (!reaction.message.guild.members.cache.get(user.id).roles.cache.some(r => r.name === "Lycéen"))
+                await reaction.message.guild.members.cache.get(user.id).roles.add(prof_role);
+        }
+        if (reaction.emoji.id === babyyoda_emoji) {
+            if (!reaction.message.guild.members.cache.get(user.id).roles.cache.some(r => r.name === "Professeur"))
+                await reaction.message.guild.members.cache.get(user.id).roles.add(lycee_role);
+        }
+    }
+});
+
+client.on('messageReactionRemove', async (reaction, user) => {
+    lycee_role = reaction.message.guild.roles.cache.find(role => role.name === "Lycéen");
+    prof_role = reaction.message.guild.roles.cache.find(role => role.name === "Professeur");
+    if (user.bot) return;
+    if (!reaction.message.guild) return;
+    console.log(reaction.message.channel.id)
+    console.log(reaction_role_channel)
+    if (reaction.message.channel.id == reaction_role_channel) {
+        if (reaction.emoji.id === mandalorian_emoji) {
+            await reaction.message.guild.members.cache.get(user.id).roles.remove(prof_role);
+        }
+        if (reaction.emoji.id === babyyoda_emoji) {
+            await reaction.message.guild.members.cache.get(user.id).roles.remove(lycee_role);
+        }
+    }
+});
 
 client.login("ODI4MDI5MDA0NTk4MzQ1NzI5.YGjoGg.UuNHrR3Scf4DaDDtCvXAQLnnRUw");
