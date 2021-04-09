@@ -30,13 +30,15 @@ client.on('message', async function (message) {
 })
 
 function sendAllChannnels (message) {
-    client.channels.fetch('827997613281771541').then(Channel => {Channel.send(message)})
-    client.channels.fetch('827998361017516052').then(Channel => {Channel.send(message)})
-    client.channels.fetch('827999312645455902').then(Channel => {Channel.send(message)})
-    client.channels.fetch('828000683185143851').then(Channel => {Channel.send(message)})
-    client.channels.fetch('828001133989330955').then(Channel => {Channel.send(message)})
-    client.channels.fetch('828001728309493851').then(Channel => {Channel.send(message)})
-    client.channels.fetch('828002029204930631').then(Channel => {Channel.send(message)})
+    client.channels.fetch('827997613281771541').then(Channel => {Channel.send(message)}) //Edouard Branly - Creteil
+    client.channels.fetch('827998361017516052').then(Channel => {Channel.send(message)}) //Edouard Branly - Nogent
+    client.channels.fetch('827999312645455902').then(Channel => {Channel.send(message)}) // Louise Michel
+    client.channels.fetch('828536989418127370').then(Channel => {Channel.send(message)}) // Adolphe cherioux
+    client.channels.fetch('828001133989330955').then(Channel => {Channel.send(message)}) // Christophe Colomb
+    client.channels.fetch('828001728309493851').then(Channel => {Channel.send(message)}) // Notre Dame des Missions - 1
+    client.channels.fetch('830190051778494474').then(Channel => {Channel.send(message)}) // Notre Dame des Missions - 2
+    client.channels.fetch('828002029204930631').then(Channel => {Channel.send(message)}) // Petit Val
+    client.channels.fetch('830164696405114920').then(Channel => {Channel.send(message)}) // Cachan
 }
 
 // Timer
@@ -51,20 +53,24 @@ client.on('message', async function (message) {
 
             var distance = Math.floor((countDownDate - now)/1000);
 
+            if (distance == (60 * 45)) {
+                sendAllChannnels("Il vous reste 45 minutes ! ⌚");
+            }
+
             if (distance == (60 * 30)) {
-                sendAllChannnels("Plus que 30 minutes ! ⏰");
+                sendAllChannnels("Plus que 30 minutes avant la fin ! ⏰");
             }
 
             if (distance == (60 * 15)) {
-                sendAllChannnels("Plus que 15 minutes ! ⏲");
+                sendAllChannnels("15 minutes, c'est le temps qu'il vous reste Mando ! ⏲");
             }
 
             if (distance == (60 * 10)) {
-                sendAllChannnels("Plus que 10 minutes ! 🕙");
+                sendAllChannnels("Plus que 10 minutes pour sauver Bébé Yoda ! 🕙");
             }
 
             if (distance == (60 * 5)) {
-                sendAllChannnels("Plus que 5 minutes ! ⏱");
+                sendAllChannnels("Le temps presse, il ne vous reste plus que 5 minutes ! ⏱");
             }
 
             if (distance == 60) {
@@ -96,14 +102,22 @@ client.on('message', async message => {
 
     let args = message.content.substring(1).split(" ")
 
+    musicQueue = [
+        'https://www.youtube.com/watch?v=l_sst6n72H4'
+    ]
+
+    
     switch (args[0]) {
         case 'play':
             async function play(connection, message) {
                 var server = servers[message.guild.id]
-
+                
                 var broadcast = client.voice.createBroadcast();
-                broadcastDispatcher = broadcast.play(ytdl(musicQueue[0], { filter: 'audioonly' }));
-                server.dispatcher = connection.play(broadcast);
+                broadcastDispatcher = broadcast.play(ytdl(musicQueue[0], { filter: 'audioonly' }), {volume: 0.15});
+                server.dispatcher = connection.play(broadcast).on("finish", function() {
+                    musicQueue.shift()
+                    play(connection, message);
+                });
 
                 ytdl.getInfo(musicQueue[0], function (err, info) {
                     const embed = new Discord.MessageEmbed().setAuthor(info.title, client.user.displayAvatarURL)
@@ -116,14 +130,9 @@ client.on('message', async message => {
 
                     console.error(error, 'Promise error');
                 });
-
-                musicQueue.shift();
-                musicQueue = musicQueue;
+                
                 broadcastDispatcher.on('speaking', function () {
-                    if (musicQueue[0]) {
-                        message.channel.send("BOT : Play")
-                        play(connection, message);
-                    } else {
+                    if (!musicQueue[0]){
                         broadcastDispatcher.end();
                         message.member.voice.channel.leave();
                         voiceConnection = null;
@@ -137,13 +146,7 @@ client.on('message', async message => {
                 return;
             }
 
-            musicQueue = [
-                'https://www.youtube.com/watch?v=V7yqW64Dx7c', // The Mandalorian - Soundtrack [Theme Song]
-                'https://www.youtube.com/watch?v=xlYCxbBZUCY', // John Williams - Duel of the Fates (Star Wars Soundtrack) [HQ]
-                'https://www.youtube.com/watch?v=Y7vJVKsDfn4', // Cantina Band
-                'https://www.youtube.com/watch?v=-bzWSJG93P8', // Star Wars- The Imperial March (Darth Vader's Theme)
-                'https://www.youtube.com/watch?v=_MXi3qt-wOY', // Anakin vs Obi-wan and Yoda VS Sidious.
-            ]
+
 
             if (voiceConnection == null) {
                 message.member.voice.channel.join().then(function (connection) {
@@ -156,22 +159,8 @@ client.on('message', async message => {
             }
             break;
 
-        case 'skip':
-            var server = servers[message.guild.id];
-            message.channel.send("Musique Suivante !  ➡️  🎵")
-            console.log('BOT : Musique Suivante')
-            if (broadcastDispatcher) broadcastDispatcher.end();
-            break;
-
         case 'stop':
-            var server = servers[message.guild.id];
             if (voiceConnection != null) {
-                for (var i = musicQueue.length - 1; i >= 0; i--) {
-                    server.queue.splice(i, 1);
-                }
-                for (var i = musicQueue.length - 1; i >= 0; i--) {
-                    musicQueue.splice(i, 1);
-                }
                 broadcastDispatcher.end();
                 voiceConnection = null;
                 message.channel.send("L'Empire arrive ! Arrêtez la musique 🎵")
@@ -238,4 +227,4 @@ client.on('messageReactionRemove', async (reaction, user) => {
     }
 });
 
-client.login("ODI4MDI5MDA0NTk4MzQ1NzI5.YGjoGg.UuNHrR3Scf4DaDDtCvXAQLnnRUw");
+client.login("");
